@@ -6,7 +6,7 @@ tags:
   - tags
 ---
 **State**
-```
+```ruby
 /* Persistent state on all servers:
 (Updated on stable storage before responding to RPCs)
 */
@@ -23,7 +23,7 @@ nextIndex[]          //对于每一台服务器，下一条将要发给该服务
 matchIndex[]         //每一个服务器已知的最高的已复制的条目的索引，初始为0
 ```
 **RequestVote RPC**
-```
+```ruby
 //Invoked by candidates to gather votes (§5.2).
 Arguments:
 term                      //候选者的term值
@@ -44,7 +44,7 @@ Receiver implementation:
 ```
 **AppendEntries RPC**
 
-```
+```ruby
 //Invoked by leader to replicate log entries; also used as heartbeat
 Arguments:
 term                               //leader当前的term值
@@ -73,7 +73,7 @@ Receiver implementation:
 5. If leaderCommit > commitIndex, set commitIndex = min(leaderCommit, index of last new entry)
 ```
 **InstallSnapshot RPC**
-```
+```go
 //Invoked by leader to send chunks of a snapshot to a follower. Leaders always send chunks in order.
 Arguments:
 term                               //leader的当前term
@@ -106,7 +106,7 @@ Receiver implementation:
 ```
 
 **Rules for Servers**
-```
+```python
 All Servers:
 // commitIndex > lastApplied,证明lastApplied到commitIndex之间的日志条目都可以提交给state machine执行
 • If commitIndex > lastApplied: increment lastApplied, apply log[lastApplied] to state machine 
