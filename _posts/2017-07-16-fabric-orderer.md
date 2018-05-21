@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Hyperledger fabric 1.0 代码解析 之 Orderer Service（一）
+title: Hyperledger fabric 1.0 代码解析 之 Orderer Service
 tags:
   - Fabric
 ---

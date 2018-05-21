@@ -97,7 +97,7 @@ func (scf *systemChainFilter) Apply(env *cb.Envelope) (filter.Action, filter.Com
      }
 }
 ```
- 6. **Enqueue**，这个地方在通道里等待orderer的处理，orderer处理方式可以在相应的consensus.go文件中找到。这边orderer何时生成block的具体代码分析，参见[Hyperledger fabric 代码解析 之 Orderer Service（一）]({{ site.baseurl }}/fabric-orderer/)  中的2.6部分
+ 6. **Enqueue**，这个地方在通道里等待orderer的处理，orderer处理方式可以在相应的consensus.go文件中找到。这边orderer何时生成block的具体代码分析，参见[Hyperledger fabric 代码解析 之 Orderer Service）]({{ site.baseurl }}/fabric-orderer/)  中的2.6部分
  
 ```go
 if !support.Enqueue(msg) {
