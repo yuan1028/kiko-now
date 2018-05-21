@@ -1,3 +1,10 @@
+---
+layout: post
+title: Raft一致性算法伪码详解
+tags:
+  - Raft
+  - tags
+---
 **State**
 ```
 /* Persistent state on all servers:

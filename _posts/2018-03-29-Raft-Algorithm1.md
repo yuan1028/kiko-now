@@ -1,3 +1,11 @@
+---
+layout: post
+title: Raft算法流程详解
+tags:
+  - Raft
+  - tags
+---
+
 [Raft官方网站](https://raft.github.io/)，其中有个5个节点可以自主控制的例子：
 [一个很好的学习raft的动画](http://thesecretlivesofdata.com/raft/)
 下文中的图片均来自raft论文。
@@ -6,7 +14,7 @@
 一致性的一般实现的原理：当其中某个服务器收到客户端的一组指令时,它必须与其它服务器交流以保证所有的服务器都是以同样的顺序收到同样的指令,所有的服务器产生一致的结果,看起来就像是一台机器一样。
 ##Raft算法中的基本概念
 ###复制状态机
-![statemachine.jpg](/images/statemachine.jpg)
+![statemachine.jpg]({{ site.baseurl }}/images/statemachine.jpg)
 
 上图为复制状态机的架构。简单看日志（Log）通常就是一系列指令等，状态机（State Machine）用来处理从日志中读出的指令。这里先假设状态机为确定性状态机，即按照相同顺序运行相同的指令后，达到的状态是一致的。因而只要保证日志中消息内容和顺序的一致性，即可保证状态的一致性。一致性算法负责确保日志的一致性，状态机的执行由各个服务器独立完成。
 通常一致性算法中通常都会有一下几个特点。
@@ -21,7 +29,7 @@
 - Candidate
 
 正常情况下，只会存在一个Leader，然后其他服务器均为Follower。Follower是被动响应的，并不会自己处理请求而是简单的回应Leaders或者Candidates。Leader节点处理所有客户端的请求。Candidate是用来选举出新的Leader的一个中间状态。
-![role.png](https://upload-images.jianshu.io/upload_images/9290815-50c3b2e63af860c0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![role.png]({{ site.baseurl }}/images/role.png)
 ###Term
 Raft中将时间划分为不定长度的任期Terms，Terms为连续的数字。每个Term以选举开始，如果选举成功，则集群会在当前Term下由当前的leader管理。如果选举失败，并没有选举出新的单一leader，则会开启新的Term，重新开始选举。
 ![term.jpg](https://upload-images.jianshu.io/upload_images/9290815-eaa8da8e0486b04d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
