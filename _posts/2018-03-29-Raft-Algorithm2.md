@@ -3,10 +3,9 @@ layout: post
 title: Raft一致性算法伪码详解
 tags:
   - Raft
-  - tags
 ---
 **State**
-```ruby
+```go
 /* Persistent state on all servers:
 (Updated on stable storage before responding to RPCs)
 */
@@ -44,19 +43,19 @@ Receiver implementation:
 ```
 **AppendEntries RPC**
 
-```ruby
+```go
 //Invoked by leader to replicate log entries; also used as heartbeat
 Arguments:
-term                               //leader当前的term值
-leaderId                           //follower在收到client request时，可以用该值转发给leader
-prevLogIndex                       //上一条日志条目的索引
-prevLogTerm                        //上一条日志条目的term
-entries[]                          //日志条目，对于心跳包则该值为空，日志条目可以为多条
-leaderCommit                       //leader服务器的commitIndex
+term                               // leader当前的term值
+leaderId                           // follower在收到client request时，可以用该值转发给leader
+prevLogIndex                       // 上一条日志条目的索引
+prevLogTerm                        // 上一条日志条目的term
+entries[]                          // 日志条目，对于心跳包则该值为空，日志条目可以为多条
+leaderCommit                       // leader服务器的commitIndex
 
 Results:
-term                          //当前任期
-success                       //具体的判断如下
+term                          // 当前任期
+success                       // 具体的判断如下
 
 Receiver implementation:
 //任期值比当前任期小，则该RPC已失效，或当前leader已变更
@@ -76,13 +75,13 @@ Receiver implementation:
 ```go
 //Invoked by leader to send chunks of a snapshot to a follower. Leaders always send chunks in order.
 Arguments:
-term                               //leader的当前term
-leaderId                           //leader的id
-lastIncludedIndex                  //该snapshot中包含的最大的日志的索引值
-lastIncludedTerm                   //该snapshot中包含的最大的日志的所属的term
-offset                             //用来定位shapshot文件的偏移量，snapshot文件可能很大，要分几次传，每次称之为一个chunk
-data[]                             //snapshot数据，通常为state machine的当前状态     
-done                               //是否为最后一个chunk
+term                               // leader的当前term
+leaderId                           // leader的id
+lastIncludedIndex                  // 该snapshot中包含的最大的日志的索引值
+lastIncludedTerm                   // 该snapshot中包含的最大的日志的所属的term
+offset                             // 用来定位shapshot文件的偏移量，snapshot文件可能很大，要分几次传，每次称之为一个chunk
+data[]                             // snapshot数据，通常为state machine的当前状态     
+done                               // 是否为最后一个chunk
 
 Results:
 term                               //currentTerm
@@ -106,7 +105,7 @@ Receiver implementation:
 ```
 
 **Rules for Servers**
-```python
+```go
 All Servers:
 // commitIndex > lastApplied,证明lastApplied到commitIndex之间的日志条目都可以提交给state machine执行
 • If commitIndex > lastApplied: increment lastApplied, apply log[lastApplied] to state machine 
