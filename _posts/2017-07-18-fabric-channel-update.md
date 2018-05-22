@@ -8,25 +8,27 @@ tags:
 ## client端逻辑代码     
 "github.com/hyperledger/fabric/peer/channel/update.go"
 
-1. client发起*channel update –c channel_name -f tx_path*请求，其中参数channel_name为channel的名称,tx_path为需要更新的tx文件的路径。目前channel的
+1.client发起*channel update –c channel_name -f tx_path*请求，其中参数channel_name为channel的名称,tx_path为需要更新的tx文件的路径。目前channel的
 update操作只支持从tx文件更新。
-2. 接收到update请求后，从**ConfigTx**文件中（**ReadFile**）生成包体Envelope，并对生成的包体Envelope进行校验与签名，通过**broadcast**接口向orderer发送update channel消息即签过名的包体Envelope。
+
+2.接收到update请求后，从**ConfigTx**文件中（**ReadFile**）生成包体Envelope，并对生成的包体Envelope进行校验与签名，通过**broadcast**接口向orderer发送update channel消息即签过名的包体Envelope。
 
 ## orderer端逻辑代码   
 "github.com/hyperledger/fabric/orderer"
 **该部分有很多和channel create的内容是重复的，主要差别在第4步及之后的内容。**
 
-1. orderer端对于broadcast、deliver和join分别有3个对应的handler来处理（server.go）.Handle为broadcast主处理函数(broadcast/broadcast.go)，负责peer消息的处理，包括channel的创建以及其他类型的消息，其中channel通过类型HeaderType_CONFIG_UPDATE进行区分。
-2. 若channelHeaderType是HeaderType_CONFIG_UPDATE，则为create channel或者是update channel的操作。此时调用process函数来获得新建或者更新的包体Envelope.
+1.orderer端对于broadcast、deliver和join分别有3个对应的handler来处理（server.go）.Handle为broadcast主处理函数(broadcast/broadcast.go)，负责peer消息的处理，包括channel的创建以及其他类型的消息，其中channel通过类型HeaderType_CONFIG_UPDATE进行区分。
+
+2.若channelHeaderType是HeaderType_CONFIG_UPDATE，则为create channel或者是update channel的操作。此时调用process函数来获得新建或者更新的包体Envelope.
 
 ```go
 if chdr.Type == int32(cb.HeaderType_CONFIG_UPDATE) {
             logger.Debugf("Preprocessing CONFIG_UPDATE")
             msg, err = bh.sm.Process(msg)
-……
+         //...
 }
 ```
-3. Process（Configupdate/configupdate.go）以channel相关信息生成Envelope消息，并将该Envelope消息重新打包到以TYPE: HeaderType_CONFIG_UPDATE为类型的消息体中。函数中通过判断包体传递过来的chainID是否已存在来判断是create还是update操作。chainID存在，则调用existingChannelConfig函数。
+3.Process（Configupdate/configupdate.go）以channel相关信息生成Envelope消息，并将该Envelope消息重新打包到以TYPE: HeaderType_CONFIG_UPDATE为类型的消息体中。函数中通过判断包体传递过来的chainID是否已存在来判断是create还是update操作。chainID存在，则调用existingChannelConfig函数。
 Configupdate/configupdate.go
 
 ```go
@@ -47,7 +49,7 @@ func (p *Processor) Process(envConfigUpdate *cb.Envelope) (*cb.Envelope, error) 
 }
 ```
 
-4. 通过**GetChain**获得**该channel**的**ChainSupport**。(在channel create的时候这个地方是system chain)
+4.通过**GetChain**获得**该channel**的**ChainSupport**。(在channel create的时候这个地方是system chain)
 
 ```go
 support, ok := bh.sm.GetChain(chdr.ChannelId)
@@ -57,7 +59,7 @@ if !ok {
  }
 ```
 
-5. support.Filters().Apply(msg)，该处的filter为该channel的filter。
+5.support.Filters().Apply(msg)，该处的filter为该channel的filter。
 
 ```go
 _, filterErr := support.Filters().Apply(msg)
@@ -92,7 +94,7 @@ func createSystemChainFilters(ml *multiLedger, ledgerResources *ledgerResources)
     })
 }
 ```
-6. Enqueue，这个地方在通道里等待orderer的处理，orderer处理方式可以在相应的consensus.go文件中找到。这边orderer何时生成block的具体代码分析，参见[Hyperledger fabric 代码解析 之 Orderer Service]({{ site.baseurl }}/fabric-orderer/)中的2.6部分
+6.Enqueue，这个地方在通道里等待orderer的处理，orderer处理方式可以在相应的consensus.go文件中找到。这边orderer何时生成block的具体代码分析，参见[Hyperledger fabric 代码解析 之 Orderer Service]({{ site.baseurl }}/fabric-orderer/)中的2.6部分
 
 ```go
 if !support.Enqueue(msg) {
@@ -144,12 +146,11 @@ func (ch *chain) main() {
     }
 }
 ```
-7. WriteBlock,等待orderer这边满足写块的条件。这个地方会调用第五步filter.commiter返回的Committer的commit。
+7.WriteBlock,等待orderer这边满足写块的条件。这个地方会调用第五步filter.commiter返回的Committer的commit。
  muitichain/chainsupport.go
 
 ```go
 func (cs *chainSupport) WriteBlock(block *cb.Block, committers []filter.Committer, encodedMetadataValue []byte) *cb.Block {
-        logger.Debugf("[hzyangwenlong] this is WriteBlock.....in and the commiters is %v", committers)
         //之前filter返回的committer到这一步才真正的commit
         for _, committer := range committers {
                 committer.Commit()
@@ -204,4 +205,4 @@ func (cm *configManager) Apply(configEnv *cb.ConfigEnvelope) error {
     return nil
 }
 ```
-8. Send
+8.Send

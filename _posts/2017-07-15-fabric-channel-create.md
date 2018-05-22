@@ -9,18 +9,18 @@ tags:
 ## Client端逻辑代码     
 "github.com/hyperledger/fabric/peer/channel/create.go"
 
-1. client发起channel create –c channel_name请求，其中参数channel_name为channel的名称。
+1.client发起channel create –c channel_name请求，其中参数channel_name为channel的名称。
 
-2. client端从ConfigTx文件中（createChannelFromConfigTx）或者按照默认配置（createChannelFromDefaults）生成包体Envelope，并对生成的包体Envelope进行校验与签名，通过broadcast接口向orderer发送创建channel消息即签过名的包体Envelope。 （sendCreateChainTransaction）
+2.client端从ConfigTx文件中（createChannelFromConfigTx）或者按照默认配置（createChannelFromDefaults）生成包体Envelope，并对生成的包体Envelope进行校验与签名，通过broadcast接口向orderer发送创建channel消息即签过名的包体Envelope。 （sendCreateChainTransaction）
 
-3.  client端收到channel创建成功消息后， 通过deliver接口获取orderer中第0块block（**getGenesisBlock**），并将该block存入本地生成channelname.block文件，作为该channel的创始块（**WriteFile**）。
+3.client端收到channel创建成功消息后， 通过deliver接口获取orderer中第0块block（**getGenesisBlock**），并将该block存入本地生成channelname.block文件，作为该channel的创始块（**WriteFile**）。
 
 ## Orderer端逻辑代码   
 "github.com/hyperledger/fabric/orderer"
      
-1. 列表orderer端对于broadcast、deliver和join分别有3个对应的handler来处理（server.go）.Handle为broadcast主处理函数(broadcast/broadcast.go)，负责peer消息的处理，包括channel的创建以及其他类型的消息，其中channel通过类型**HeaderType_CONFIG_UPDATE**进行区分。
-2. 若channelHeaderType是**HeaderType_CONFIG_UPDATE**，则为create channel或者是update channel的操作。此时调用**process**函数来获得新建或者更新的包体Envelope.
+1.列表orderer端对于broadcast、deliver和join分别有3个对应的handler来处理（server.go）.Handle为broadcast主处理函数(broadcast/broadcast.go)，负责peer消息的处理，包括channel的创建以及其他类型的消息，其中channel通过类型**HeaderType_CONFIG_UPDATE**进行区分。
 
+2.若channelHeaderType是**HeaderType_CONFIG_UPDATE**，则为create channel或者是update channel的操作。此时调用**process**函数来获得新建或者更新的包体Envelope.
 ```go
 if chdr.Type == int32(cb.HeaderType_CONFIG_UPDATE) {
             logger.Debugf("Preprocessing CONFIG_UPDATE")
@@ -28,7 +28,7 @@ if chdr.Type == int32(cb.HeaderType_CONFIG_UPDATE) {
             //...
 }
 ```
-3. **Process**（Configupdate/configupdate.go）以channel相关信息生成Envelope消息，并将该Envelope消息重新打包到以TYPE: HeaderType_CONFIG_UPDATE为类型的消息体中。函数中通过判断包体传递过来的chainID是否已存在来判断是create还是update操作。chainID不存在，则调用**newChannelConfig**函数生成新的channelconfig。（这里其实有很多内容待会再分析）
+3.**Process**（Configupdate/configupdate.go）以channel相关信息生成Envelope消息，并将该Envelope消息重新打包到以TYPE: HeaderType_CONFIG_UPDATE为类型的消息体中。函数中通过判断包体传递过来的chainID是否已存在来判断是create还是update操作。chainID不存在，则调用**newChannelConfig**函数生成新的channelconfig。（这里其实有很多内容待会再分析）
 Configupdate/configupdate.go
 
 ```go
@@ -48,7 +48,7 @@ func (p *Processor) Process(envConfigUpdate *cb.Envelope) (*cb.Envelope, error) 
     return p.newChannelConfig(channelID, envConfigUpdate)
 }
 ```
-4. 通过**GetChain**获得**System channel**的**ChainSupport**。(现在这个chain还不存在)
+4.通过**GetChain**获得**System channel**的**ChainSupport**。(现在这个chain还不存在)
 
 ```go
 
@@ -58,7 +58,7 @@ if !ok {
       return srv.Send(&ab.BroadcastResponse{Status: cb.Status_NOT_FOUND})
  }
 ```
-5. **support.Filters().Apply(msg)**，其中filter由一个名为**systemChainFilter**(mutichain/systemchain.go) 负责，其功能为生成一个新的chain（这个时候还暂时不会生成真正的chain,只是会得到一个相应的**commiter**）。
+5.**support.Filters().Apply(msg)**，其中filter由一个名为**systemChainFilter**(mutichain/systemchain.go) 负责，其功能为生成一个新的chain（这个时候还暂时不会生成真正的chain,只是会得到一个相应的**commiter**）。
 
 ```go
 _, filterErr := support.Filters().Apply(msg)
@@ -97,7 +97,7 @@ func (scf *systemChainFilter) Apply(env *cb.Envelope) (filter.Action, filter.Com
      }
 }
 ```
- 6. **Enqueue**，这个地方在通道里等待orderer的处理，orderer处理方式可以在相应的consensus.go文件中找到。这边orderer何时生成block的具体代码分析，参见[Hyperledger fabric 代码解析 之 Orderer Service）]({{ site.baseurl }}/fabric-orderer/)  中的2.6部分
+ 6.**Enqueue**，这个地方在通道里等待orderer的处理，orderer处理方式可以在相应的consensus.go文件中找到。这边orderer何时生成block的具体代码分析，参见[Hyperledger fabric 代码解析 之 Orderer Service）]({{ site.baseurl }}/fabric-orderer/)  中的2.6部分
  
 ```go
 if !support.Enqueue(msg) {
@@ -148,7 +148,7 @@ func (ch *chain) main() {
     }
 }
 ```
-7. **WriteBlock**,等待orderer这边满足写块的条件。这个地方第五步**filter.commiter**返回的systemChainCommitter的**commit**，这个地方才会去调用**newChain**，才是真正的创建channel。
+7.**WriteBlock**,等待orderer这边满足写块的条件。这个地方第五步**filter.commiter**返回的systemChainCommitter的**commit**，这个地方才会去调用**newChain**，才是真正的创建channel。
 muitichain/chainsupport.go
 
 ```go
@@ -206,4 +206,4 @@ func (ml *multiLedger) newChain(configtx *cb.Envelope) {
         ml.chains = newChains
 }
 ```
-8. **Send**
+8.**Send**
