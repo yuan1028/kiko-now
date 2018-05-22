@@ -6,7 +6,8 @@ tags:
 ---
 
 ### cscc:PeerConfiger
-```
+
+```go
 {
         Enabled:           true,
         Name:              "cscc",
@@ -22,7 +23,8 @@ tags:
 2. **chaincode的InitCmdFactory**过程，对于invoke,instantiate等需要orderer参与的过程，在InitCmdFactory中需要GetOrdererEndpointOfChain中会涉及到cscc的**GetConfigBlock**过程,主要用处是从css获得configblock,然后从configblock中解析出orderer的address.
 3. **channel list**过程会调用，涉及到其**GetChannels**过程，其作用主要是获取peer加入了那些channel。
 ### lscc:LifeCycleSysCC
-```
+
+```go
  {
         Enabled:           true,
         Name:              "lscc",
@@ -42,7 +44,8 @@ tags:
 5. **chaincode Lanuch**过程中，对于部分情况，需要调用GetCDSFromLSCC，涉及到lscc的**getdepspec**过程。
 6. "getid","getchaincodes","getinstalledchaincodes"暂未找到相关调用。
 ### escc:EndorserOneValidSignature
-```
+
+```go
 {
         Enabled:   true,
         Name:      "escc",
@@ -54,7 +57,8 @@ tags:
 主要处理参数：只做签名背书用，无参数
 主要用处:**ProcessProposal**中的**endorseProposal**过程会调用，用以对模拟执行的结果进行签名。
 ### vscc:ValidatorOneValidSignature
-```
+
+```go
 {
         Enabled:   true,
         Name:      "vscc",
@@ -66,7 +70,8 @@ tags:
 主要处理参数：只做验证背书用，无参数
 主要用处：peer端在处理**deliverBlock**（从orderer端传过来的block）的时候,在真正**commit block**过程中做证实用。
 ### qscc:LedgerQuerier
-```
+
+```go
 {
         Enabled:           true,
         Name:              "qscc",
