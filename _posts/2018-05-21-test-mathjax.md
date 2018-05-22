@@ -20,7 +20,7 @@ MathJax.Hub.Config({
     "HTML-CSS": { preferredFont: "TeX", availableFonts: ["STIX","TeX"] }
 });
 </script>
-<script type="text/javascript" src="{{ site.baseurl }}/js/MathJax.js"></script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 测试一下
 
