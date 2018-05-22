@@ -1,4 +1,3 @@
-
 ---
 layout: post
 title: Hyperledger fabric 1.0 代码解析 之 verify and commit block
@@ -136,7 +135,6 @@ func (lc *LedgerCommitter) Commit(block *common.Block) error {
 
     // Validate and mark invalid transactions
     logger.Debug("Validating block")
-    //[hzyangwenlongTODO] validate
     if err := lc.validator.Validate(block); err != nil {
         return err
     }

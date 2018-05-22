@@ -153,7 +153,6 @@ muitichain/chainsupport.go
 
 ```go
 func (cs *chainSupport) WriteBlock(block *cb.Block, committers []filter.Committer, encodedMetadataValue []byte) *cb.Block {
-        logger.Debugf("[hzyangwenlong] this is WriteBlock.....in and the commiters is %v", committers)
         for _, committer := range committers {
                 committer.Commit()
         }
