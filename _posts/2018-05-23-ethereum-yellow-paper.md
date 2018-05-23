@@ -4,18 +4,43 @@ title: 以太坊黄皮书详解
 tags:
   - Ethereum
 ---
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+        inlineMath: [ ['$', '$'] ],
+        displayMath: [ ['$$', '$$']],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    messageStyle: "none",
+    "HTML-CSS": { preferredFont: "TeX", availableFonts: ["STIX","TeX"] }
+});
+</script>
+<script type="text/javascript" src={{ site.baseurl }}/js/MathJax.js></script>
+
 ## 写在篇头
 本文对以太坊的黄皮书的解析，并参照go-ethereum中的实现，将相应的代码也列了出来。黄皮书中使用了大量的公式将以太坊的一些流程和状态都公式化了。看不看得懂公式对理解的影响不大。本文中对公式进行了解析。嫌麻烦的可以跳过每部分公式解析的部分。
 ## 一、区块链范型
 以太坊本质是一个基于交易的状态机（transaction-based state machine）。其以初始状态（genesis state) 为起点，通过执行交易来到达新的状态。
-> (1) σ<sub>t+1</sub> ≡ γ(σ<sub>t</sub>,T)
- 
+
+
+$$
+\begin{equation}
+{\sigma}_{t+1} \equiv \Upsilon(\boldsymbol{\sigma}_{t}, T)
+\end{equation}
+$$
+
 公式1表示t+1时的状态，是由t时的状态经过交易T转变而来。转变函数为γ。
 如下图所示
 ![Transaction Function]({{ site.baseurl }}/images/ethereumtransaction.png)
->（2）σ<sub>t+1</sub> ≡ Π(σ<sub>t</sub>,B)
-（3）B ≡ (…,(T<sub>0</sub>,T<sub>1</sub>,…)) 
-（4）Π(σ<sub>t</sub>,B) ≡Ω(B,γ(γ(σ,T<sub>0</sub> ),T<sub>1</sub>)…) 
+$$
+\begin{eqnarray}
+\boldsymbol{\sigma}_{t+1} & \equiv & {\Pi}(\boldsymbol{\sigma}_{t}, B) \\
+B & \equiv & (..., (T_0, T_1, ...) ) \\
+\Pi(\boldsymbol{\sigma}, B) & \equiv & {\Omega}(B,{\Upsilon}(\Upsilon(\boldsymbol{\sigma}, T_0), T_1) ...)
+\end{eqnarray}
+$$
 
 公式2-4是从区块的角度来描述状态的转化过程。
 公式2: t+1时的状态，是由t时的状态经过区块B转变而来。转变函数为Π。
@@ -34,6 +59,7 @@ tags:
 | 10<sup>12</sup>  | Szabo  |   
 | 10<sup>15</sup>  | Finney |   
 | 10<sup>18</sup>  | Ether   |  
+
 ### 1.2 分叉
 以太坊的正确运行建立在其链上只有一个链是有效的，所有人都必须要接受它。拥有多个状态（或多个链）会摧毁这个系统，因为它在哪个是正确状态的问题上不可能得到统一结果。如果链分叉了，你有可能在一条链上拥有10个币，一条链上拥有20个币，另一条链上拥有40个币。在这种场景下，是没有办法确定哪个链才是最”有效的“。不论什么时候只要多个路径产生了，一个”分叉“就会出现。
 为了确定哪个路径才是最有效的以及防止多条链的产生，以太坊使用了一个叫做“GHOST协议(GHOST protocol.)”的数学机制。
@@ -42,9 +68,13 @@ tags:
 ### 2.1 世界状态
 以太坊中的世界状态指地址(Address)与账户状态(Account State)的集合。世界状态并不是存储在链上，而是通过Merkle Patricia tree来维护。
 账户状态（Account State）包含四个属性。
+
 - nonce: 如果账户是一个外部拥有账户，nonce代表从此账户地址发送的交易序号。如果账户是一个合约账户，nonce代表此账户创建的合约序号。用σ[a]<sub>n</sub>来表示。
+
 - balance：此地址拥有Wei的数量。1Ether=10^18Wei。用σ[a]<sub>b</sub>来表示。
+
 - storageRoot： 理论上是指Merkle Patricia树的根节点256位的Hash值。用σ[a]<sub>s</sub>来表示。公式6中有介绍。
+
 - codeHash：此账户EVM代码的hash值。对于外部拥有账户，codeHash域是一个空字符串
 的Hash值。对于合约账户，就是代码的Hash作为codeHash保存。用σ[a]<sub>c</sub>来表示。
 
@@ -59,28 +89,82 @@ type Account struct {
 ```
 
 **关于storageRoot的补充**
->(6) TRIE(L<sup>*</sup><sub>I</sub>(σ[a]<sub>s</sub>))≡σ[a]<sub>s</sub>
-(7) L<sub>I</sub>((k, v)) ≡ (KEC(k), RLP(v)) where 
-(8) k ∈ B<sub>32</sub> 
+$$
+\begin{equation}
+{\small TRIE}\big(L_{I}^*(\boldsymbol{\sigma}[a]_{\mathbf{s}})\big) \equiv \boldsymbol{\sigma}[a]_{\mathrm{s}}
+\tag{6}
+\end{equation}
+$$
+
+$$
+\begin{equation}
+L_{I}\big( (k, v) \big) \equiv \big({\small KEC}(k), {\small RLP}(v)\big)
+\tag{7}
+\end{equation}
+$$
+$$
+\begin{equation}
+k \in \mathbb{B}_{32} \quad \wedge \quad v \in \mathbb{N}
+\tag{8}
+\end{equation}
+$$
+
 
 公式6, 由于有些时候我们不仅需要state的hash值的trie，而是需要其对应的kv数据也包含其中。所以以太坊中的存储State的树，不仅包含State的hash，同时也包含了存储这个账户的address的hash和它对应的data也就是其Account的值的数据对的集合。这里storageRoot实际上是这样的树的根节点hash值。
+
 公式7，指state对应的kv数据的RLP的形式化表示，是k的hash值作为key，value是v的RLP表示。也就是以太坊中实际存储的state是账户address的hash（KEC(k)）,与其数据Account内容的RLP（RLP(v)）。
+
 公式8，指公式7中的k是32的字符数组。这个是由KECCAK256算法保证的。
+
 *注：原本公式8中要求的是v是个正整数，但是我看来下代码和下文公式10，感觉这里的v都应该是Account的内容*
 **一些符号化定义**
 以太坊中的账户有两类，一类是外部账户，一类是合约账户。其中外部账户被私钥控制且没有任何代码与之关联。合约账户，被它们的合约代码控制且有代码与之关联。以下几个公式定义了账户的各种状态。
->(9)L<sub>S</sub>≡{p(a):σ[a]≠Ø}
-(10)p(a)≡(KEC(a),RLP(σ[a]<sub>n</sub>,σ[a]<sub>b</sub>, σ[a]<sub>s</sub>, σ[a]<sub>c</sub>))
-(11)∀a:σ[a]=Ø∨(a∈B<sub>20</sub>∧v([a]))
-(12)v(x) ≡ x<sub>n</sub>∈N<sub>256</sub> ∧ x<sub>b</sub> ∈N<sub>256</sub> ∧ x<sub>s</sub>∈B<sub>32</sub> ∧ x<sub>c</sub>∈B<sub>32</sub>
-(13) EMPTY(σ,a) ≡ σ[a]<sub>c</sub>=KEC(()) ∧ σ[a]<sub>n</sub> = 0 ∧ σ[a]<sub>b</sub> = 0
-(14) DEAD(σ, a) ≡ σ[a] = Ø ∨ EMPTY(σ, a)
+$$
+\begin{equation}
+L_{S}(\boldsymbol{\sigma}) \equiv \{ p(a): \boldsymbol{\sigma}[a] \neq \varnothing \}
+\end{equation}
+$$
+where
+$$
+\begin{equation}
+p(a) \equiv  \big({\small KEC}(a), {\small RLP}\big( (\boldsymbol{\sigma}[a]_{\mathrm{n}}, \boldsymbol{\sigma}[a]_{\mathrm{b}}, \boldsymbol{\sigma}[a]_{\mathrm{s}}, \boldsymbol{\sigma}[a]_{\mathrm{c}}) \big) \big)
+\end{equation}
+$$
+
+$$
+\begin{equation}
+\forall a: \boldsymbol{\sigma}[a] = \varnothing \; \vee \; (a \in \mathbb{B}_{20} \; \wedge \; v(\boldsymbol{\sigma}[a]))
+\end{equation}
+$$
+
+$$
+\begin{equation}
+\quad v(x) \equiv x_{\mathrm{n}} \in \mathbb{N}_{256} \wedge x_{\mathrm{b}} \in \mathbb{N}_{256} \wedge x_{\mathrm{s}} \in \mathbb{B}_{32} \wedge x_{\mathrm{c}} \in \mathbb{B}_{32}
+\end{equation}
+$$
+
+$$
+\begin{equation}
+\mathtt{\tiny EMPTY}(\boldsymbol{\sigma}, a) \quad\equiv\quad \boldsymbol{\sigma}[a]_{\mathrm{c}} = {\small KEC}\big(()\big) \wedge \boldsymbol{\sigma}[a]_{\mathrm{n}} = 0 \wedge \boldsymbol{\sigma}[a]_{\mathrm{b}} = 0
+\end{equation}
+$$
+
+$$
+\begin{equation}
+\mathtt{\tiny DEAD}(\boldsymbol{\sigma}, a) \quad\equiv\quad \boldsymbol{\sigma}[a] = \varnothing \vee \mathtt{\tiny EMPTY}(\boldsymbol{\sigma}, a)
+\end{equation}
+$$
 
 公式9，定义了函数L<sub>S</sub>，意思是若账户a不为空，则返回账户p(a)。
+
 公式10，定义p(a),p(a)其实就是我们上面公式7，解释k，v对的时候的kv对。包括address的hash值，以及Account内容的RLP结果。
+
 公式11与公式12，对账户a做了定义，表示账户要么为空，要么就是一个a为20个长度的字符，其nonce值为小于2<sup>256</sup>的正整数，balance值为小于2<sup>256</sup>的正整数，storageRoot为32位的字符，codeHash为32的字符。
+
 公式13，定义了空账户。若一个账户，其地址为空字符，并且该账户nonce值为0，balance值也为0.
+
 公式14，定义了死账户，死账户要么为空Ø，要么是一个 EMPTY账户。
+
 ### 2.2 交易
 - nonce: 与发送该交易的账户的nonce值一致。用T<sub>n</sub>表示。
 - gasPrice: 表示每gas的单价为多少wei。用T<sub>p</sub>表示。
