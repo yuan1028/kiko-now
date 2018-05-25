@@ -517,3 +517,267 @@ $$
 \tag{120}
 \end{equation}
 $$
+
+$$
+\begin{equation}
+(\boldsymbol{\sigma}', g', A, \mathbf{o}) \equiv \Xi(\boldsymbol{\sigma}, g, I)
+\tag{121}
+\end{equation}
+$$
+
+$$
+\begin{equation}
+A \equiv (\mathbf{s}, \mathbf{l}, \mathbf{t}, r)
+\tag{122}
+\end{equation}
+$$
+
+$$
+\begin{eqnarray}
+\Xi(\boldsymbol{\sigma}, g, I, T) & \equiv & (\boldsymbol{\sigma}', \boldsymbol{\mu}'_{\mathrm{g}}, A, \mathbf{o}) \\
+(\boldsymbol{\sigma}', \boldsymbol{\mu}', A, ..., \mathbf{o}) & \equiv & X\big((\boldsymbol{\sigma}, \boldsymbol{\mu}, A^0, I)\big) \\
+\boldsymbol{\mu}_{\mathrm{g}} & \equiv & g \\
+\boldsymbol{\mu}_{\mathrm{pc}} & \equiv & 0 \\
+\boldsymbol{\mu}_{\mathbf{m}} & \equiv & (0, 0, ...) \\
+\boldsymbol{\mu}_{\mathrm{i}} & \equiv & 0 \\
+\boldsymbol{\mu}_{\mathbf{s}} & \equiv & () \\
+\boldsymbol{\mu}_{\mathbf{o}} & \equiv & ()
+\end{eqnarray}
+$$
+
+$$
+\begin{equation} \label{eq:X-def}
+X\big( (\boldsymbol{\sigma}, \boldsymbol{\mu}, A, I) \big) \equiv \begin{cases}
+\big(\varnothing, \boldsymbol{\mu}, A^0, I, \varnothing\big) & \text{if} \quad Z(\boldsymbol{\sigma}, \boldsymbol{\mu}, I) \\
+\big(\varnothing, \boldsymbol{\mu}', A^0, I, \mathbf{o}\big) & \text{if} \quad w = {\small REVERT} \\
+O(\boldsymbol{\sigma}, \boldsymbol{\mu}, A, I) \cdot \mathbf{o} & \text{if} \quad \mathbf{o} \neq \varnothing \\
+X\big(O(\boldsymbol{\sigma}, \boldsymbol{\mu}, A, I)\big) & \text{otherwise} \\
+\end{cases}
+\end{equation}
+$$
+
+$$
+\begin{eqnarray}
+\mathbf{o} & \equiv & H(\boldsymbol{\mu}, I) \\
+(a, b, c, d) \cdot e & \equiv & (a, b, c, d, e) \\
+\boldsymbol{\mu}' & \equiv & \boldsymbol{\mu}\ \text{except:} \\
+\boldsymbol{\mu}'_{\mathrm{g}} & \equiv & \boldsymbol{\mu}_{\mathrm{g}} - C(\boldsymbol{\sigma}, \boldsymbol{\mu}, I)
+\end{eqnarray}
+$$
+
+$$
+\begin{equation}\label{eq:currentoperation}
+w \equiv \begin{cases} I_{\mathbf{b}}[\boldsymbol{\mu}_{\mathrm{pc}}] & \text{if} \quad \boldsymbol{\mu}_{\mathrm{pc}} < \lVert I_{\mathbf{b}} \rVert \\
+{\small STOP} & \text{otherwise}
+\end{cases}
+\end{equation}
+$$
+
+$$
+\begin{equation} 
+Z(\boldsymbol{\sigma}, \boldsymbol{\mu}, I) \equiv
+\begin{array}[t]{l}
+\boldsymbol{\mu}_g < C(\boldsymbol{\sigma}, \boldsymbol{\mu}, I) \quad \vee \\
+\mathbf{\delta}_w = \varnothing \quad \vee \\
+\lVert\boldsymbol{\mu}_\mathbf{s}\rVert < \mathbf{\delta}_w \quad \vee \\
+( w = {\small JUMP} \quad \wedge \quad \boldsymbol{\mu}_\mathbf{s}[0] \notin D(I_\mathbf{b}) ) \quad \vee \\
+( w = {\small JUMPI} \quad \wedge \quad \boldsymbol{\mu}_\mathbf{s}[1] \neq 0 \quad \wedge \\
+\quad \boldsymbol{\mu}_\mathbf{s}[0] \notin D(I_\mathbf{b}) ) \quad \vee \\
+( w = {\small RETURNDATACOPY} \wedge \\ \quad \boldsymbol{\mu}_{\mathbf{s}}[1] + \boldsymbol{\mu}_{\mathbf{s}}[2] > \lVert\boldsymbol{\mu}_{\mathbf{o}}\rVert) \quad \vee \\
+\lVert\boldsymbol{\mu}_\mathbf{s}\rVert - \mathbf{\delta}_w + \mathbf{\alpha}_w > 1024 \vee
+ (\neg I_{\mathrm{w}} \wedge W(w, \boldsymbol{\mu}))
+\end{array}
+\end{equation}
+$$
+
+$$
+\begin{equation}
+W(w, \boldsymbol{\mu}) \equiv \\ 
+\begin{array}[t]{l}
+w \in \{ {\small CREATE}, {\small SSTORE}, {\small SELFDESTRUCT}\} \ \vee \\
+{\small LOG0} \le w \wedge w \le {\small LOG4} \quad \vee \\
+w \in \{ {\small CALL}, {\small CALLCODE}\} \wedge \boldsymbol{\mu}_{\mathbf{s}}[2] \neq 0
+\end{array}
+\end{equation}
+$$
+
+$$
+\begin{equation}
+D(\mathbf{c}) \equiv D_{J}(\mathbf{c}, 0)
+\end{equation}
+$$
+
+$$
+\begin{equation}
+D_{J}(\mathbf{c}, i) \equiv \begin{cases}
+\{\} & \text{if} \quad i \geqslant |\mathbf{c}|  \\
+\{ i \} \cup D_{J}(\mathbf{c}, N(i, \mathbf{c}[i])) & \\
+\quad\quad\text{if} \quad \mathbf{c}[i] = {\small JUMPDEST} \\
+D_{J}(\mathbf{c}, N(i, \mathbf{c}[i])) & \text{otherwise} \\
+\end{cases}
+\end{equation}
+$$
+
+$$
+\begin{equation}
+N(i, w) \equiv \begin{cases}
+i + w - {\small PUSH1} + 2 & \\
+\quad\quad\text{if} \quad w \in [{\small PUSH1}, {\small PUSH32}] \\
+i + 1 & \text{otherwise} \end{cases}
+\end{equation}
+$$
+
+$$
+\begin{equation}
+H(\boldsymbol{\mu}, I) \equiv \begin{cases}
+H_{ {\tiny RETURN}}(\boldsymbol{\mu}) \ \text{if} \quad w \in \{{\small {RETURN}}, {\small REVERT}\} &\\
+() \quad\quad\ \text{if} \quad w \in \{ {\small {STOP}}, {\small {SELFDESTRUCT}} \} &\\
+\varnothing \quad\quad\ \text{otherwise}&
+\end{cases}
+\end{equation}
+$$
+
+$$
+\begin{eqnarray}
+O\big((\boldsymbol{\sigma}, \boldsymbol{\mu}, A, I)\big) & \equiv & (\boldsymbol{\sigma}', \boldsymbol{\mu}', A', I) \\
+\Delta & \equiv & \mathbf{\alpha}_{w} - \mathbf{\delta}_{w} \\
+\lVert\boldsymbol{\mu}'_{\mathbf{s}}\rVert & \equiv & \lVert\boldsymbol{\mu}_{\mathbf{s}}\rVert + \Delta \\
+\quad \forall x \in [\mathbf{\alpha}_{w}, \lVert\boldsymbol{\mu}'_{\mathbf{s}}\rVert): \boldsymbol{\mu}'_{\mathbf{s}}[x] & \equiv & \boldsymbol{\mu}_{\mathbf{s}}[x-\Delta]
+\end{eqnarray}
+$$
+
+$$
+\begin{eqnarray}
+\quad \boldsymbol{\mu}'_{g} & \equiv & \boldsymbol{\mu}_{g} - C(\boldsymbol{\sigma}, \boldsymbol{\mu}, I) \label{eq:mu_pc}\\
+\quad \boldsymbol{\mu}'_{\mathrm{pc}} & \equiv & \begin{cases}
+{J_{\text{JUMP}}}(\boldsymbol{\mu}) & \text{if} \quad w = {\small JUMP} \\
+{J_{\text{JUMPI}}}(\boldsymbol{\mu}) & \text{if} \quad w = {\small JUMPI} \\
+N(\boldsymbol{\mu}_{\mathrm{pc}}, w) & \text{otherwise}
+\end{cases}
+\end{eqnarray}
+$$
+
+$$
+\begin{eqnarray}
+\boldsymbol{\mu}'_{\mathbf{m}} & \equiv & \boldsymbol{\mu}_{\mathbf{m}} \\
+\boldsymbol{\mu}'_{\mathrm{i}} & \equiv & \boldsymbol{\mu}_{\mathrm{i}} \\
+A' & \equiv & A \\
+\boldsymbol{\sigma}' & \equiv & \boldsymbol{\sigma}
+\end{eqnarray}
+$$
+
+$$
+\begin{eqnarray}
+B_{\mathrm{t}} & \equiv & B'_{\mathrm{t}} + B_{\mathrm{d}} \\
+B' & \equiv & P(B_{H})
+\end{eqnarray}
+$$
+
+$$
+\begin{equation}
+\lVert B_{\mathbf{U}} \rVert \leqslant 2 \bigwedge_{\mathbf{U} \in B_{\mathbf{U}}} {V({\mathbf{U}}})\; \wedge \; k({\mathbf{U}}, P(\mathbf{B}_{\mathbf{H}})_{\mathbf{H}}, 6)
+\end{equation}
+$$
+
+$$
+\begin{equation}
+k(U, H, n) \equiv \begin{cases} false & \text{if} \quad n = 0 \\
+s(U, H) &\\
+\quad \vee \; k(U, P(H)_{H}, n - 1) & \text{otherwise}
+\end{cases}
+\end{equation}
+$$
+
+$$
+\begin{equation}
+s(U, H) \equiv (P(H) = P(U)\; \wedge \; H \neq U \; \wedge \; U \notin B(H)_{\mathbf{U}})
+\end{equation}
+$$
+
+$$
+\begin{equation}
+{B_{H}}_{\mathrm{g}} = {\ell}({\mathbf{R})_{\mathrm{u}}}
+\end{equation}
+$$
+
+$$
+\begin{eqnarray}
+\\ \nonumber
+\Omega(B, \boldsymbol{\sigma}) & \equiv & \boldsymbol{\sigma}': \boldsymbol{\sigma}' = \boldsymbol{\sigma} \quad \text{except:} \\
+\qquad\boldsymbol{\sigma}'[{\mathbf{B}_{H}}_{\mathrm{c}}]_{\mathrm{b}} & = & \boldsymbol{\sigma}[{\mathbf{B}_{H}}_{\mathrm{c}}]_{\mathrm{b}} + \left(1 + \frac{\lVert \mathbf{B}_{\mathbf{U}}\rVert}{32}\right)R_{\mathrm{block}} \\
+\qquad\forall_{\mathbf{U} \in \mathbf{B}_{\mathbf{U}}}: \\ \nonumber
+\boldsymbol{\sigma}'[\mathbf{U}_{\mathrm{c}}] & = & \begin{cases}
+\varnothing &\text{if}\ \boldsymbol{\sigma}[\mathbf{U}_{\mathrm{c}}] = \varnothing\ \wedge\ R = 0 \\
+\mathbf{a}' &\text{otherwise}
+\end{cases} \\
+\mathbf{a}' &\equiv& (\boldsymbol{\sigma}[U_{\mathrm{c}}]_{\mathrm{n}}, \boldsymbol{\sigma}[U_{\mathrm{c}}]_{\mathrm{b}} + R, \boldsymbol{\sigma}[U_{\mathrm{c}}]_{\mathbf{s}}, \boldsymbol{\sigma}[U_{\mathrm{c}}]_{\mathrm{c}}) \\
+R & \equiv & \left(1 + \frac{1}{8} (U_{\mathrm{i}} - {B_{H}}_{\mathrm{i}})\right) R_{\mathrm{block}}
+\end{eqnarray}
+$$
+
+$$
+\begin{equation}
+\text{Let} \quad R_{\mathrm{block}} = 3 \times 10^{18}
+\end{equation}
+$$
+
+$$
+\begin{equation}
+\Gamma(B) \equiv \begin{cases}
+\boldsymbol{\sigma}_0 kern 10pc \ \text{if} \quad P(B_{H}) = \varnothing \\
+\boldsymbol{\sigma}_{\mathrm{i}}: \mathtt{\small {TRIE}}(L_{S}(\boldsymbol{\sigma}_{\mathrm{i}})) = {P(B_{H})_{H}}_{\mathrm{r}} \quad\text{otherwise}
+\end{cases}
+\end{equation}
+$$
+
+$$
+\begin{eqnarray}
+\Phi(B) & \equiv & B': \quad B' = B^* \quad \text{except:} \\
+B'_{\mathrm{n}} & = & n: \quad x \leqslant \frac{2^{256}}{H_{\mathrm{d}}} \\
+B'_{\mathrm{m}} & = & m \quad \text{with } (x, m) = \mathtt{PoW}(B^*_{\cancel {n}}, n, \mathbf{d}) \\
+B^* & \equiv & B \quad \text{except:} \quad {B^*_{\mathrm{r}}} = {r}({\Pi}(\Gamma(B), B))
+\end{eqnarray}
+$$
+
+$$
+\begin{equation}
+\boldsymbol{\sigma}[n] = \begin{cases} {\Gamma}(B) & \text{if} \quad n < 0 \\ 
+{\Upsilon}(\boldsymbol{\sigma}[n - 1], B_{\mathbf{T}}[n]) & \text{otherwise} \end{cases}
+\end{equation}
+$$
+
+$$
+\begin{equation}
+\mathbf{R}[n]_{\mathrm{u}} = \begin{cases} 0 & \text{if} \quad n < 0 \\
+\begin{array}[b]{l}
+\Upsilon^g(\boldsymbol{\sigma}[n - 1], B_{\mathbf{T}}[n])\\ \quad + \mathbf{R}[n-1]_{\mathrm{u}}
+\end{array}
+ & \text{otherwise} \end{cases}
+\end{equation}
+$$
+
+$$
+\begin{equation}
+\mathbf{R}[n]_{\mathbf{l}} =
+\Upsilon^{\mathbf{l}}(\boldsymbol{\sigma}[n - 1], B_{\mathbf{T}}[n])
+\end{equation}
+$$
+
+$$
+\begin{equation}
+\mathbf{R}[n]_{\mathrm{z}} =
+\Upsilon^{\mathrm{z}}(\boldsymbol{\sigma}[n - 1], B_{\mathbf{T}}[n])
+\end{equation}
+$$
+
+$$
+\begin{equation}
+\Pi(\boldsymbol{\sigma}, B) \equiv {\Omega}(B, \ell(\boldsymbol{\sigma}))
+\end{equation}
+$$
+
+$$
+\begin{equation}
+m = {H_{\mathrm{m}}} \quad \wedge \quad n \leqslant \frac{2^{256}}{H_{\mathrm{d}}} \quad \text{with} \quad (m, n) = \mathtt{PoW}({H_{\cancel {n}}}, H_{\mathrm{n}}, \mathbf{d})
+\end{equation}
+$$
