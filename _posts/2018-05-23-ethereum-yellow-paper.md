@@ -2,7 +2,7 @@
 published: true
 comments: true
 layout: post
-title: 以太坊黄皮书详解(一)
+title: 以太坊黄皮书详解（一）
 tags:
   - Ethereum
 ---
