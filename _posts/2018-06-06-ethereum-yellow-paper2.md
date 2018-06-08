@@ -377,7 +377,7 @@ $$
 {}\forall i \in A_{\mathbf{t}}: \boldsymbol{\sigma}'[i] & = & \varnothing \quad\text{if}\quad \mathtt{\tiny DEAD}(\boldsymbol{\sigma}^*\kern -2pt, i) \tag{72}
 \end{eqnarray}
 $$
-公式70-72定义了，交易的结束状态。结束状态${\sigma}'$与预结束状态的区别为，将自毁集合中的账户置为空，公式71，将涉及到的账户集合中的死掉的账户，置为空。公式72.
+公式70-72定义了，交易的结束状态。结束状态${\sigma}'$与预结束状态的区别为，将自毁集合中的账户置为空，公式71，将可控的账户集合中的死掉的账户，置为空。公式72.
 
 $$
 \begin{eqnarray}
@@ -749,7 +749,7 @@ $$
 $$
 \begin{equation}
 \boldsymbol{\sigma}_1[s] \equiv \begin{cases}
-\varnothing & \text{if}\ \boldsymbol{\sigma}_1'[s] = \varnothing \ \wedge\ v = 0 
+\varnothing & \text{if}\ \boldsymbol{\sigma}_1'[s] = \varnothing \ \wedge\ v = 0 \\
 \mathbf{a}_1 &\text{otherwise}
 \end{cases}
 \tag{101}
@@ -806,8 +806,7 @@ $$
 \boldsymbol{\sigma}^{**} & \text{otherwise}
 \end{cases} \tag{106}\\
 g' & \equiv & \begin{cases}
-0 & \text{if} \quad \boldsymbol{\sigma}^{**} = \varnothing \ \wedge \\
-&\quad \mathbf{o} = \varnothing \\
+0 & \text{if} \quad \boldsymbol{\sigma}^{**} = \varnothing \ \wedge  \mathbf{o} = \varnothing \\
 g^{**} & \text{otherwise}
 \end{cases} \tag{107}\\ 
 z & \equiv & \begin{cases}
@@ -826,6 +825,7 @@ I_{\mathrm{w}} & \equiv & w \tag{117}\\
 \mathbf{t} & \equiv & \{s, r\} \tag{118}\\
 \end{eqnarray}
 $$
+
 $$
 \begin{equation}
 \Xi \equiv \begin{cases}
@@ -858,7 +858,7 @@ $$
 - $I_v$为捐献值（注意这里并不是转账值），即$\tilde{v}$;
 - $I_e$当前调用栈深度，即e;
 - $I_w$权限管理，即w;
-- $t$涉及到的账户（touched accounts）为调用者账户和接收者账户;
+- $t$可控的账户（touched accounts）为调用者账户和接收者账户;
 
 虚拟机执行的合约为公式119-120，其中公式119的前8种为预编译好的合约，主要完成一些基本的加密和运算等操作，最后一种即为调用用户的合约。
 

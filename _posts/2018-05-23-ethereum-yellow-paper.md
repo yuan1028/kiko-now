@@ -8,7 +8,7 @@ tags:
 ---
 
 ## 写在篇头
-本文对以太坊的黄皮书的解析，并参照go-ethereum中的实现，将相应的代码也列了出来。黄皮书中使用了大量的公式将以太坊的一些流程和状态都公式化了。看不看得懂公式对理解的影响不大。本文中对公式进行了解析。嫌麻烦的可以跳过每部分公式解析的部分。
+本文是对以太坊的黄皮书的解析，并参照go-ethereum中的实现，将相应的代码也列了出来。黄皮书中使用了大量的公式将以太坊的一些流程和状态都公式化了。看不看得懂公式对理解的影响不大。本文中对公式进行了解析。嫌麻烦的可以跳过每部分公式解析的部分。
 ## 一、区块链范型
 以太坊本质是一个基于交易的状态机（transaction-based state machine）。其以初始状态（genesis state) 为起点，通过执行交易来到达新的状态。
 
@@ -22,6 +22,7 @@ $$
 
 公式1表示t+1时的状态，是由t时的状态经过交易T转变而来。转变函数为$\Upsilon$。
 如下图所示
+
 ![Transaction Function]({{ site.baseurl }}/images/ethereumtransaction.png)
 $$
 \begin{equation}
@@ -140,21 +141,21 @@ $$
 
 $$
 \begin{equation}
-\forall a: \boldsymbol{\sigma}[a] = \varnothing \; \vee \; (a \in \mathbb{B}_{20} \; \wedge \; v(\boldsymbol{\sigma}[a]))
+\forall a: \boldsymbol{\sigma}[a] = \varnothing \vee  (a \in \mathbb{B}_{20}  \wedge  v(\boldsymbol{\sigma}[a]))
 \tag{11}
 \end{equation}
 $$
 
 $$
 \begin{equation}
-\quad v(x) \equiv x_{\mathrm{n}} \in \mathbb{N}_{256} \wedge x_{\mathrm{b}} \in \mathbb{N}_{256} \wedge x_{\mathrm{s}} \in \mathbb{B}_{32} \wedge x_{\mathrm{c}} \in \mathbb{B}_{32}
+v(x) \equiv {x}_{\mathrm{n}} \in \mathbb{N}_{256} \wedge {x}_{\mathrm{b}} \in \mathbb{N}_{256} \wedge {x}_{\mathrm{s}} \in \mathbb{B}_{32} \wedge {x}_{\mathrm{c}} \in \mathbb{B}_{32}
 \tag{12}
 \end{equation}
 $$
 
 $$
 \begin{equation}
-\mathtt{\tiny EMPTY}(\boldsymbol{\sigma}, a) \quad\equiv\quad \boldsymbol{\sigma}[a]_{\mathrm{c}} = {\small KEC}\big(()\big) \wedge \boldsymbol{\sigma}[a]_{\mathrm{n}} = 0 \wedge \boldsymbol{\sigma}[a]_{\mathrm{b}} = 0
+\mathtt{\tiny EMPTY}(\boldsymbol{\sigma}, a) \quad \equiv \quad \boldsymbol{\sigma}[a]_{\mathrm{c}} = {\small KEC} \big(()\big) \wedge \boldsymbol{\sigma}[a]_{\mathrm{n}} = 0 \wedge \boldsymbol{\sigma}[a]_{\mathrm{b}} = 0
 \tag{13}
 \end{equation}
 $$
@@ -225,8 +226,8 @@ $$
 
 $$
 \begin{equation}
-\begin{array}[t]{lclclc}
-T_{\mathrm{n}} \in \mathbb{N}_{256} & \wedge & T_{\mathrm{v}} \in \mathbb{N}_{256} & \wedge & T_{\mathrm{p}} \in \mathbb{N}_{256} & \wedge \\
+\begin{array}
+\quad T_{\mathrm{n}} \in \mathbb{N}_{256} & \wedge & T_{\mathrm{v}} \in \mathbb{N}_{256} & \wedge & T_{\mathrm{p}} \in \mathbb{N}_{256} & \wedge \\
 T_{\mathrm{g}} \in \mathbb{N}_{256} & \wedge & T_{\mathrm{w}} \in \mathbb{N}_5 & \wedge & T_{\mathrm{r}} \in \mathbb{N}_{256} & \wedge \\
 T_{\mathrm{s}} \in \mathbb{N}_{256} & \wedge & T_{\mathbf{d}} \in \mathbb{B} & \wedge & T_{\mathbf{i}} \in \mathbb{B}
 \end{array}
@@ -261,6 +262,7 @@ $$
 以太坊中的一个区块由区块头Header，以及交易列表$B_{\mathbf{T}}$,以及ommerblock的header集合$B_{\mathbf{U}}$三部分组成。
 
 Header包括以下字段。
+
 - parentHash: 父节点的hash值。用$H_{\mathrm{p}}$表示。
 - ommersHash: uncle节点的hash值，这块是跟GHOST相关的，用$H_{\mathrm{o}}$表示。
 - beneficiary: 矿工address，用$H_{\mathrm{c}}$表示。
@@ -276,6 +278,7 @@ Header包括以下字段。
 - extraData:额外的数据，合法的交易对长度有限制，用$H_{\mathrm{x}}$表示。
 - mixHash: 与nonce一起用作工作量证明，用$H_{\mathrm{m}}$表示。
 - nonce:与mixHash一起用作工作量证明，用$H_{\mathrm{n}}$表示。
+
 ![image.png]({{ site.baseurl }}/images/ethereumblock.png)
 
 ```go
@@ -368,7 +371,7 @@ $$
 
 $$
 \begin{equation}
-O_{\mathrm{a}} \in \mathbb{B}_{20} \quad \wedge \quad \forall_{t \in O_{\mathbf{t}}}: t \in \mathbb{B}_{32} \quad \wedge \quad O_{\mathbf{d}} \in \mathbb{B}
+O_{\mathrm{a}} \in \mathbb{B}_{20}  \wedge  \forall_{t \in O_{\mathbf{t}}}: t \in \mathbb{B}_{32}  \wedge  O_{\mathbf{d}} \in \mathbb{B}
 \tag{25}
 \end{equation}
 $$
@@ -400,8 +403,8 @@ $$
 \begin{array}
 {}H_{\mathrm{r}} &\equiv& \mathtt{\small TRIE}(L_S(\Pi(\boldsymbol{\sigma}, B))) & \wedge \\
 {}H_{\mathrm{o}} &\equiv& \mathtt{\small KEC}(\mathtt{\small RLP}(L_H^*(B_{\mathbf{U}}))) & \wedge \\
-{}H_{\mathrm{t}} &\equiv& \mathtt{\small TRIE}(\{\forall i < \lVert B_{\mathbf{T}} \rVert, i \in \mathbb{P}: &\\&& \quad\quad p (i, L_{T}(B_{\mathbf{T}}[i]))\}) & \wedge \\
-{}H_{\mathrm{e}} &\equiv& \mathtt{\small TRIE}(\{\forall i < \lVert B_{\mathbf{R}} \rVert, i \in \mathbb{P}: &\\&& \quad\quad p(i, {L_{R}}(B_{\mathbf{R}}[i]))\}) & \wedge \\
+{}H_{\mathrm{t}} &\equiv& \mathtt{\small TRIE}(\{\forall i < \lVert B_{\mathbf{T}} \rVert, i \in \mathbb{P}:  \quad p (i, L_{T}(B_{\mathbf{T}}[i]))\}) & \wedge \\
+{}H_{\mathrm{e}} &\equiv& \mathtt{\small TRIE}(\{\forall i < \lVert B_{\mathbf{R}} \rVert, i \in \mathbb{P}:  \quad p(i, {L_{R}}(B_{\mathbf{R}}[i]))\}) & \wedge \\
 {}H_{\mathrm{b}} &\equiv& \bigvee_{\mathbf{r} \in B_{\mathbf{R}}} \big( \mathbf{r}_{\mathrm{b}} \big)
 \end{array}
 \tag{31}
@@ -426,7 +429,7 @@ $$
 
 $$
 \begin{equation}
-\quad L_{H}(H) \equiv  (\begin{array} {}H_{\mathrm{p}}, H_{\mathrm{o}}, H_{\mathrm{c}}, H_{\mathrm{r}}, H_{\mathrm{t}}, H_{\mathrm{e}}, H_{\mathrm{b}}, H_{\mathrm{d}}, H_{\mathrm{i}}, H_{\mathrm{l}}, H_{\mathrm{g}}, H_{\mathrm{s}}, H_{\mathrm{x}}, H_{\mathrm{m}}, H_{\mathrm{n}} \; )\end{array} 
+\quad L_{H}(H) \equiv  ({}H_{\mathrm{p}}, H_{\mathrm{o}}, H_{\mathrm{c}}, H_{\mathrm{r}}, H_{\mathrm{t}}, H_{\mathrm{e}}, H_{\mathrm{b}}, H_{\mathrm{d}}, H_{\mathrm{i}}, H_{\mathrm{l}}, H_{\mathrm{g}}, H_{\mathrm{s}}, H_{\mathrm{x}}, H_{\mathrm{m}}, H_{\mathrm{n}} )
 \tag{34}
 \end{equation}
 $$
