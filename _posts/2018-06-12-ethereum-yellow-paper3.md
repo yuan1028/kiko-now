@@ -528,6 +528,8 @@ H_{ {\tiny RETURN}}(\boldsymbol{\mu}) \ \text{if} \quad w \in \{{\small {RETURN}
 $$
 
 ### 6.5 执行的生命周期的形式化表示
+执行过程中栈元素从栈顶入栈和出栈（黄皮书中栈顶元素为0），每次从栈顶取出操作执行，并根据操作进行相应的出栈和入栈操作。栈中其余的元素不变。如公式143-146所示。
+
 $$
 \begin{eqnarray}
 O\big((\boldsymbol{\sigma}, \boldsymbol{\mu}, A, I)\big) & \equiv & (\boldsymbol{\sigma}', \boldsymbol{\mu}', A', I) \tag{143}\\
@@ -536,7 +538,13 @@ O\big((\boldsymbol{\sigma}, \boldsymbol{\mu}, A, I)\big) & \equiv & (\boldsymbol
 \quad \forall x \in [\mathbf{\alpha}_{w}, \lVert\boldsymbol{\mu}'_{\mathbf{s}}\rVert): \boldsymbol{\mu}'_{\mathbf{s}}[x] & \equiv & \boldsymbol{\mu}_{\mathbf{s}}[x-\Delta] \tag{146}
 \end{eqnarray}
 $$
+公式143表示，每次操作原先的状态$\boldsymbol{\sigma}$,原先的机器状态$\boldsymbol{\mu}$,原先的子状态A,原先的参数I，执行后为新临时状态$\boldsymbol{\sigma}'$,新的机器状态$\boldsymbol{\mu}'$,新的子状态A',参数I不变。
 
+公式144表示，栈的变化，其中$\mathbf{\alpha}_{w}$为当前操作的入栈集合,$\mathbf{\delta}_{w}$为当前操作的出栈集合。
+
+公式145表示，栈的长度，即为在原先栈的长度+变化的长度。
+
+公式146表示，栈中的元素，除了新增的元素$\mathbf{\alpha}_{w}$，其余的不变。（黄皮书中栈顶是0，所以如果入栈元素多于出栈元素，则原先元素的索引都会加相应偏移）。
 $$
 \begin{eqnarray}
 \quad \boldsymbol{\mu}'_{g} & \equiv & \boldsymbol{\mu}_{g} - C(\boldsymbol{\sigma}, \boldsymbol{\mu}, I) \label{eq:mu_pc} \tag{147} \\
@@ -548,6 +556,7 @@ N(\boldsymbol{\mu}_{\mathrm{pc}}, w) & \text{otherwise}
 \tag{148}
 \end{eqnarray}
 $$
+公式147-148表示每一次迭代gas和程序计数器pc的变化。其中gas值为原有gas减去当前操作的花费，pc在JUMP和JUMPI的时候是跳转到相应位置，其余情况是加一，到下一条指令。
 
 $$
 \begin{eqnarray}
@@ -557,8 +566,11 @@ A' & \equiv & A \tag{151}\\
 \boldsymbol{\sigma}' & \equiv & \boldsymbol{\sigma} \tag{152}
 \end{eqnarray}
 $$
+公式149-152，假设操作对其余的元素都不产生影响。实际上不同操作会对不同部分有影响。
 
-
+## 七、区块的最终确定
+在区块的生成过程中，更多的时候是一棵树状的结构。为了在树形结构中确认一条链作为区块链，在以太坊中定义“最重”的链为主链。
+这里的重指的是累计难度（td，total difficulty定义如公式153-154），也就是td最大的链为主链。
 $$
 \begin{eqnarray}
 B_{\mathrm{t}} & \equiv & B'_{\mathrm{t}} + B_{\mathrm{d}} \tag{153}\\
@@ -566,7 +578,107 @@ B' & \equiv & P(B_{H})
 \tag{154}
 \end{eqnarray}
 $$
+公式153-154表示当前区块的累积难度td值为其父区块的累积难度td值加上当前区块的难度值。
 
+区块的最终确定涉及到四个阶段：
+
+- 校验ommers。
+- 校验交易。
+- 计算和提交奖励。
+- 验证世界状态和区块的nonce值。
+
+```go
+// ValidateBody validates the given block's uncles and verifies the the block
+// header's transaction and uncle roots. The headers are assumed to be already
+// validated at this point.
+func (v *BlockValidator) ValidateBody(block *types.Block) error {
+	// Check whether the block's known, and if not, that it's linkable
+	if v.bc.HasBlockAndState(block.Hash(), block.NumberU64()) {
+		return ErrKnownBlock
+	}
+	// 验证父区块是否存在
+	if !v.bc.HasBlockAndState(block.ParentHash(), block.NumberU64()-1) {
+		if !v.bc.HasBlock(block.ParentHash(), block.NumberU64()-1) {
+			return consensus.ErrUnknownAncestor
+		}
+		return consensus.ErrPrunedAncestor
+	}
+	// 验证ommers
+	// Header validity is known at this point, check the uncles and transactions
+	header := block.Header()
+	if err := v.engine.VerifyUncles(v.bc, block); err != nil {
+		return err
+	}
+	if hash := types.CalcUncleHash(block.Uncles()); hash != header.UncleHash {
+		return fmt.Errorf("uncle root hash mismatch: have %x, want %x", hash, header.UncleHash)
+	}
+	// 验证交易的hash值
+	if hash := types.DeriveSha(block.Transactions()); hash != header.TxHash {
+		return fmt.Errorf("transaction root hash mismatch: have %x, want %x", hash, header.TxHash)
+	}
+	return nil
+}
+```
+### 7.1 Ommer的校验
+Ommer或者说uncle是指父区块的兄弟区块，以太坊中block的uncles字段用以存储uncle区块，在区块的最终确定的时候需要对ommer进行校验。
+```go
+// VerifyUncles verifies that the given block's uncles conform to the consensus
+// rules of the stock Ethereum ethash engine.
+func (ethash *Ethash) VerifyUncles(chain consensus.ChainReader, block *types.Block) error {
+	// If we're running a full engine faking, accept any input as valid
+	if ethash.config.PowMode == ModeFullFake {
+		return nil
+	}
+	// 每个区块最多有两个uncle区块
+	// Verify that there are at most 2 uncles included in this block
+	if len(block.Uncles()) > maxUncles {
+		return errTooManyUncles
+	}
+	// Gather the set of past uncles and ancestors
+	uncles, ancestors := set.New(), make(map[common.Hash]*types.Header)
+
+	// 统计七代以内的区块
+	number, parent := block.NumberU64()-1, block.ParentHash()
+	for i := 0; i < 7; i++ {
+		ancestor := chain.GetBlock(parent, number)
+		if ancestor == nil {
+			break
+		}
+		ancestors[ancestor.Hash()] = ancestor.Header()
+		for _, uncle := range ancestor.Uncles() {
+			uncles.Add(uncle.Hash())
+		}
+		parent, number = ancestor.ParentHash(), number-1
+	}
+	ancestors[block.Hash()] = block.Header()
+	uncles.Add(block.Hash())
+
+	// 确认该节点
+	// Verify each of the uncles that it's recent, but not an ancestor
+	for _, uncle := range block.Uncles() {
+		// Make sure every uncle is rewarded only once
+		hash := uncle.Hash()
+		if uncles.Has(hash) {
+			return errDuplicateUncle
+		}
+		uncles.Add(hash)
+
+		// Make sure the uncle has a valid ancestry
+		// 确认uncle区块是确实是uncle区块
+		if ancestors[hash] != nil {
+			return errUncleIsAncestor
+		}
+		if ancestors[uncle.ParentHash] == nil || uncle.ParentHash == block.ParentHash() {
+			return errDanglingUncle
+		}
+		// 验证uncle区块的header
+		if err := ethash.verifyHeader(chain, uncle, ancestors[uncle.ParentHash], true, true); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+```
 $$
 \begin{equation}
 \lVert B_{\mathbf{U}} \rVert \leqslant 2 \bigwedge_{\mathbf{U} \in B_{\mathbf{U}}} {V({\mathbf{U}}})\; \wedge \; k({\mathbf{U}}, P(\mathbf{B}_{\mathbf{H}})_{\mathbf{H}}, 6)
@@ -589,7 +701,14 @@ s(U, H) \equiv (P(H) = P(U)\; \wedge \; H \neq U \; \wedge \; U \notin B(H)_{\ma
 \tag{157}
 \end{equation}
 $$
+在以太坊中一个区块的
 
+- 兄弟区块$s(U, H)$定义如公式157，兄弟区块是指与区块自身有不同，且父区块相同$(P(H) = P(U) \wedge H \neq U $；并且该兄弟区块不在自己的uncles区块中$U \notin B(H)_{\mathbf{U}}$
+- U是否是H的n代以内uncle定义如公式156，若n为0，则返回false（没有0代的概念），否则要么U是H的兄弟区块（一代），要么U是H的父区块的n-1代叔区块。
+- uncle区块数目不超过2个，$\lVert B_{\mathbf{U}} \rVert \leqslant 2$,公式155
+- uncle区块为7代以内的区块,${V({\mathbf{U}}})\; \wedge \; k({\mathbf{U}}, P(\mathbf{B}_{\mathbf{H}})_{\mathbf{H}}, 6)$（公式里为父区块的6代以内,即自己的兄弟区块是不会包含在内的）
+
+### 7.2 校验交易
 $$
 \begin{equation}
 {B_{H}}_{\mathrm{g}} = {\ell}({\mathbf{R})_{\mathrm{u}}}
@@ -597,6 +716,46 @@ $$
 \end{equation}
 $$
 
+- 校验block中的txHash是否为block.Transaction的hash。见本章开始部分代码中ValidateBody的最后部分。
+- 虚拟机逐条执行交易，执行后校验所用的gas值是否和区块的已用gas值相同，见公式158.
+- 校验虚拟机执行后的bloom以及receipt是否与区块头中的bloom以及receiptHash相同。
+- 校验虚拟机执行之后的世界状态的树的根是否与区块头中的Root相同。
+
+```go
+// ValidateState validates the various changes that happen after a state
+// transition, such as amount of used gas, the receipt roots and the state root
+// itself. ValidateState returns a database batch if the validation was a success
+// otherwise nil and an error is returned.
+func (v *BlockValidator) ValidateState(block, parent *types.Block, statedb *state.StateDB, receipts types.Receipts, usedGas uint64) error {
+	header := block.Header()
+	// 校验交易的usedGas是否为区块的GasUsed
+	if block.GasUsed() != usedGas {
+		return fmt.Errorf("invalid gas used (remote: %d local: %d)", block.GasUsed(), usedGas)
+	}
+	// Validate the received block's bloom with the one derived from the generated receipts.
+	// For valid blocks this should always validate to true.
+	rbloom := types.CreateBloom(receipts)
+	if rbloom != header.Bloom {
+		return fmt.Errorf("invalid bloom (remote: %x  local: %x)", header.Bloom, rbloom)
+	}
+
+	// 校验收款的hash值
+	// Tre receipt Trie's root (R = (Tr [[H1, R1], ... [Hn, R1]]))
+	receiptSha := types.DeriveSha(receipts)
+	if receiptSha != header.ReceiptHash {
+		return fmt.Errorf("invalid receipt root hash (remote: %x local: %x)", header.ReceiptHash, receiptSha)
+	}
+	// 校验state
+	// Validate the state root against the received state root and throw
+	// an error if they don't match.
+	if root := statedb.IntermediateRoot(v.config.IsEIP158(header.Number)); header.Root != root {
+		return fmt.Errorf("invalid merkle root (remote: %x local: %x)", header.Root, root)
+	}
+	return nil
+}
+```
+
+### 7.3 计算奖励
 $$
 \begin{eqnarray}
 \Omega(B, \boldsymbol{\sigma}) & \equiv & \boldsymbol{\sigma}': \boldsymbol{\sigma}' = \boldsymbol{\sigma} \quad \text{except:} \tag{159}\\
@@ -618,6 +777,84 @@ $$
 \end{equation}
 $$
 
+- 矿工的奖励为固定奖励$R_{block}$如公式164,如果区块uncles不为空，则每个uncle会带来额外32分之一的$R_{block}$奖励。如公式160，矿工的余额为原余额加上奖励。
+- 对于该区块中的uncles，每个uncle块，计算其矿工的奖励，如公式163，是根据uncle块与当前块的代差来计算的。例如差1代，uncle块为当前块父区块的兄弟，那么该uncle块的矿工可以拿到八分之七的$R_{block}$奖励。差的代数越多，拿到的奖励越少。
+```go
+// AccumulateRewards credits the coinbase of the given block with the mining
+// reward. The total reward consists of the static block reward and rewards for
+// included uncles. The coinbase of each uncle block is also rewarded.
+func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header *types.Header, uncles []*types.Header) {
+	// Select the correct block reward based on chain progression
+	blockReward := FrontierBlockReward
+	if config.IsByzantium(header.Number) {
+		blockReward = ByzantiumBlockReward
+	}
+	// Accumulate the rewards for the miner and any included uncles
+	reward := new(big.Int).Set(blockReward)
+	// 计算uncle块中矿工的奖励
+	r := new(big.Int)
+	for _, uncle := range uncles {
+		r.Add(uncle.Number, big8)
+		r.Sub(r, header.Number)
+		r.Mul(r, blockReward)
+		r.Div(r, big8)
+		state.AddBalance(uncle.Coinbase, r)
+
+		r.Div(blockReward, big32)
+		reward.Add(reward, r)
+	}
+
+	// 当前矿工的奖励为固定奖励加上跟uncle区块数量相关的一部分奖励
+	state.AddBalance(header.Coinbase, reward)
+}
+
+```
+
+### 7.4 校验state和nonce
+
+- 区块执行前的世界状态定义为$\Gamma(B)$,如公式165，即执行Process之前的世界状态。
+- 执行即对区块的每条交易，运行交易转换函数（虚拟机执行，ApplyTrasaction）如公式170，每条交易执行完后，走区块的转换函数（Finalize，增加矿工奖励等），如公式169和174所示。
+- 执行交易过程中会产生交易的收据证明，相关内容如公式171-173所示。
+- 执行后的区块与最终区块的主要区别为区块头中的nonce值，mixHash值，如公式166-168所示。
+```go
+// Process processes the state changes according to the Ethereum rules by running
+// the transaction messages using the statedb and applying any rewards to both
+// the processor (coinbase) and any included uncles.
+//
+// Process returns the receipts and logs accumulated during the process and
+// returns the amount of gas that was used in the process. If any of the
+// transactions failed to execute due to insufficient gas it will return an error.
+func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg vm.Config) (types.Receipts, []*types.Log, uint64, error) {
+	var (
+		receipts types.Receipts
+		usedGas  = new(uint64)
+		header   = block.Header()
+		allLogs  []*types.Log
+		gp       = new(GasPool).AddGas(block.GasLimit())
+	)
+	// Mutate the the block and state according to any hard-fork specs
+	if p.config.DAOForkSupport && p.config.DAOForkBlock != nil && p.config.DAOForkBlock.Cmp(block.Number()) == 0 {
+		misc.ApplyDAOHardFork(statedb)
+	}
+	// Iterate over and process the individual transactions
+	for i, tx := range block.Transactions() {
+		// 虚拟机执行每条交易
+		statedb.Prepare(tx.Hash(), block.Hash(), i)
+		receipt, _, err := ApplyTransaction(p.config, p.bc, nil, gp, statedb, header, tx, usedGas, cfg)
+		if err != nil {
+			return nil, nil, 0, err
+		}
+		// 得到交易的收据与日志
+		receipts = append(receipts, receipt)
+		allLogs = append(allLogs, receipt.Logs...)
+	}
+	// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
+	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), block.Uncles(), receipts)
+
+	return receipts, allLogs, *usedGas, nil
+}
+```
+
 $$
 \begin{equation}
 \Gamma(B) \equiv \begin{cases}
@@ -627,7 +864,7 @@ $$
 \tag{165}
 \end{equation}
 $$
-
+公式165定义区块执行前的世界状态为$\Gamma(B)$，如果父区块为空，则世界状态为创世块状态，否则执行前的世界状态为其父区块头对应的世界状态树。
 $$
 \begin{eqnarray}
 \Phi(B) & \equiv & B': \quad B' = B^* \quad \text{except:} \tag{166}\\
@@ -636,7 +873,7 @@ B'_{\mathrm{m}} & = & m \quad \text{with } (x, m) = \mathtt{PoW}(B^*_{\cancel {n
 B^* & \equiv & B \quad \text{except:} \quad {B^*_{\mathrm{r}}} = {r}({\Pi}(\Gamma(B), B)) \tag{169}
 \end{eqnarray}
 $$
-
+公式166-169定义了区块的世界状态为在执行了转换函数之后${\Pi}$，其nonce值和mixHash值需要满足PoW即难度需求。
 $$
 \begin{equation}
 \boldsymbol{\sigma}[n] = \begin{cases} {\Gamma}(B) & \text{if} \quad n < 0 \\ 
@@ -644,6 +881,8 @@ $$
 \tag{170}
 \end{equation}
 $$
+
+公式170定义了第n条交易时的世界状态。当n小于0时，世界状态如前定义为${\Gamma}(B)$,否则第n条交易时的世界状态为在第n-1条交易的基础上应用交易转变函数（执行交易）。
 
 $$
 \begin{equation}
@@ -671,6 +910,11 @@ $$
 \tag{173}
 \end{equation}
 $$
+$\mathbf{R}[n]_{\mathrm{z}}$,$\mathbf{R}[n]_{\mathrm{l}}$,$\mathbf{R}[n]_{\mathrm{u}}$分别表示对应的第n条交易的状态码，日志，以及累积消耗的gas值。
+
+- $\mathbf{R}[n]_{\mathrm{u}}$的计算如公式171所示，为第n-1个的累积消耗$\mathbf{R}[n-1]_{\mathrm{u}}$,加上当前交易的消耗$\Upsilon^g(\boldsymbol{\sigma}[n - 1], B_{\mathbf{T}}[n])$。
+- $\mathbf{R}[n]_{\mathrm{l}}$为在原先的日志基础上增加相应的交易日志。
+- $\mathbf{R}[n]_{\mathrm{z}}$为在原先的状态码列表上增加相应的状态码。
 
 $$
 \begin{equation}
@@ -678,10 +922,4 @@ $$
 \tag{174}
 \end{equation}
 $$
-
-$$
-\begin{equation}
-m = {H_{\mathrm{m}}} \quad \wedge \quad n \leqslant \frac{2^{256}}{H_{\mathrm{d}}} \quad \text{with} \quad (m, n) = \mathtt{PoW}({H_{\cancel {n}}}, H_{\mathrm{n}}, \mathbf{d})
-\tag{175}
-\end{equation}
-$$
+公式174表示最终的区块为在最后交易后的世界状态上$\ell(\boldsymbol{\sigma})$,使用完善区块的转化函数${\Omega}$（即本章的内容，计算奖励等等）
