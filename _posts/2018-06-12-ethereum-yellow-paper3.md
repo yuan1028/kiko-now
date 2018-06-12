@@ -410,8 +410,12 @@ func (in *Interpreter) Run(contract *Contract, input []byte) (ret []byte, err er
 	}
 }
 ```
-- 当前操作为跳转，但是跳转到的地方不合法$( w = {\small JUMP} \wedge  \boldsymbol{\mu}_\mathbf{s}[0] \notin D(I_\mathbf{b}) )$,
-$(w = {\small JUMPI} \wedge \boldsymbol{\mu}_\mathbf{s}[1] \neq 0 \wedge  \boldsymbol{\mu}_\mathbf{s}[0] \notin D(I_\mathbf{b}) )$
+- 当前操作为跳转，但是跳转到的地方不合法
+$$
+( w = {\small JUMP} \wedge  \boldsymbol{\mu}_\mathbf{s}[0] \notin D(I_\mathbf{b}) )
+(w = {\small JUMPI} \wedge \boldsymbol{\mu}_\mathbf{s}[1] \neq 0 \wedge  \boldsymbol{\mu}_\mathbf{s}[0] \notin D(I_\mathbf{b}) )
+$$
+
 ```go
 //跳转操作
 func opJump(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
@@ -442,7 +446,8 @@ func opJumpi(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *St
 	return nil, nil
 }
 ```
-- 当前操作为返回数据操作，但是返回的数据长度超过了允许长度。$( w = {\small RETURNDATACOPY} \wedge  \boldsymbol{\mu}_{\mathbf{s}}[1] + \boldsymbol{\mu}_{\mathbf{s}}[2] > \lVert\boldsymbol{\mu}_{\mathbf{o}}\rVert)$
+- 当前操作为返回数据操作，但是返回的数据长度超过了允许长度。$$( w = {\small RETURNDATACOPY} \wedge  \boldsymbol{\mu}_{\mathbf{s}}[1] + \boldsymbol{\mu}_{\mathbf{s}}[2] > \lVert\boldsymbol{\mu}_{\mathbf{o}}\rVert)$$
+
 ```go
 func opReturnDataCopy(pc *uint64, evm *EVM, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
 	var (
@@ -540,7 +545,7 @@ O\big((\boldsymbol{\sigma}, \boldsymbol{\mu}, A, I)\big) & \equiv & (\boldsymbol
 $$
 公式143表示，每次操作原先的状态$\boldsymbol{\sigma}$,原先的机器状态$\boldsymbol{\mu}$,原先的子状态A,原先的参数I，执行后为新临时状态$\boldsymbol{\sigma}'$,新的机器状态$\boldsymbol{\mu}'$,新的子状态A',参数I不变。
 
-公式144表示，栈的变化，其中$\mathbf{\alpha}_{w}$为当前操作的入栈集合,$\mathbf{\delta}_{w}$为当前操作的出栈集合。
+公式144表示，栈的变化，其中$$\mathbf{\alpha}_{w}$$为当前操作的入栈集合,$\mathbf{\delta}_{w}$为当前操作的出栈集合。
 
 公式145表示，栈的长度，即为在原先栈的长度+变化的长度。
 
@@ -621,6 +626,7 @@ func (v *BlockValidator) ValidateBody(block *types.Block) error {
 ```
 ### 7.1 Ommer的校验
 Ommer或者说uncle是指父区块的兄弟区块，以太坊中block的uncles字段用以存储uncle区块，在区块的最终确定的时候需要对ommer进行校验。
+
 ```go
 // VerifyUncles verifies that the given block's uncles conform to the consensus
 // rules of the stock Ethereum ethash engine.
@@ -706,7 +712,7 @@ $$
 - 兄弟区块$s(U, H)$定义如公式157，兄弟区块是指与区块自身有不同，且父区块相同$(P(H) = P(U) \wedge H \neq U $；并且该兄弟区块不在自己的uncles区块中$U \notin B(H)_{\mathbf{U}}$
 - U是否是H的n代以内uncle定义如公式156，若n为0，则返回false（没有0代的概念），否则要么U是H的兄弟区块（一代），要么U是H的父区块的n-1代叔区块。
 - uncle区块数目不超过2个，$\lVert B_{\mathbf{U}} \rVert \leqslant 2$,公式155
-- uncle区块为7代以内的区块,${V({\mathbf{U}}})\; \wedge \; k({\mathbf{U}}, P(\mathbf{B}_{\mathbf{H}})_{\mathbf{H}}, 6)$（公式里为父区块的6代以内,即自己的兄弟区块是不会包含在内的）
+- uncle区块为7代以内的区块,$${V({\mathbf{U}}})\; \wedge \; k({\mathbf{U}}, P(\mathbf{B}_{\mathbf{H}})_{\mathbf{H}}, 6)$$（公式里为父区块的6代以内,即自己的兄弟区块是不会包含在内的）
 
 ### 7.2 校验交易
 $$
@@ -779,6 +785,7 @@ $$
 
 - 矿工的奖励为固定奖励$R_{block}$如公式164,如果区块uncles不为空，则每个uncle会带来额外32分之一的$R_{block}$奖励。如公式160，矿工的余额为原余额加上奖励。
 - 对于该区块中的uncles，每个uncle块，计算其矿工的奖励，如公式163，是根据uncle块与当前块的代差来计算的。例如差1代，uncle块为当前块父区块的兄弟，那么该uncle块的矿工可以拿到八分之七的$R_{block}$奖励。差的代数越多，拿到的奖励越少。
+
 ```go
 // AccumulateRewards credits the coinbase of the given block with the mining
 // reward. The total reward consists of the static block reward and rewards for
@@ -910,9 +917,10 @@ $$
 \tag{173}
 \end{equation}
 $$
-$\mathbf{R}[n]_{\mathrm{z}}$,$\mathbf{R}[n]_{\mathrm{l}}$,$\mathbf{R}[n]_{\mathrm{u}}$分别表示对应的第n条交易的状态码，日志，以及累积消耗的gas值。
 
-- $\mathbf{R}[n]_{\mathrm{u}}$的计算如公式171所示，为第n-1个的累积消耗$\mathbf{R}[n-1]_{\mathrm{u}}$,加上当前交易的消耗$\Upsilon^g(\boldsymbol{\sigma}[n - 1], B_{\mathbf{T}}[n])$。
+$$\mathbf{R}[n]_{\mathrm{z}},\mathbf{R}[n]_{\mathrm{l}},\mathbf{R}[n]_{\mathrm{u}}$$分别表示对应的第n条交易的状态码，日志，以及累积消耗的gas值。
+
+- $$\mathbf{R}[n]_{\mathrm{u}}$$ 的计算如公式171所示，为第n-1个的累积消耗$$\mathbf{R}[n-1]_{\mathrm{u}}$$, 加上当前交易的消耗 $$\Upsilon^g(\boldsymbol{\sigma}[n - 1], B_{\mathbf{T}}[n])$$ 。
 - $\mathbf{R}[n]_{\mathrm{l}}$为在原先的日志基础上增加相应的交易日志。
 - $\mathbf{R}[n]_{\mathrm{z}}$为在原先的状态码列表上增加相应的状态码。
 
