@@ -71,6 +71,7 @@ make all
 build/env.sh go run build/ci.go install ./cmd/puppeth
 ```
 - 使用puppeth按步骤生成创世区块的配置文件
+
 ```
 [**********@******]$ puppeth
 +-----------------------------------------------------------+
@@ -89,6 +90,7 @@ Please specify a network name to administer (no spaces or hyphens, please)
 >
 ```
 > 输入测试网络的名字，比方说test
+
 ```
 > test
 
@@ -105,6 +107,7 @@ What would you like to do? (default = stats)
 >
 ```
 > 配置新的创世区块，选择2
+
 ```
 > 2
 
@@ -113,7 +116,8 @@ Which consensus engine to use? (default = clique)
  2. Clique - proof-of-authority
 >
 ```
-> 选择共识模式，其中Ethash是PoW共识，Clique是PoA共识，这里可以先选择1.
+> 选择共识模式，其中Ethash是PoW共识，Clique是PoA共识，这里可以先选择1
+
 ```
 > 1
 
@@ -121,6 +125,7 @@ Which accounts should be pre-funded? (advisable at least one)
 > 0x
 ```
 > 选择预设账户，这个地方如果已经有账户，可以设，也可以直接按回车。
+
 ```
 > 0x
 
@@ -128,6 +133,7 @@ Specify your chain/network ID if you want an explicit one (default = random)
 >
 ```
 > 选择网络id，可以输入一个整数，也可以直接回车，这一步结束，就是配置完成了。
+
 ```
 >
 INFO [06-19|14:50:49] Configured new genesis block
@@ -139,6 +145,7 @@ What would you like to do? (default = stats)
  4. Deploy network components
 ```
 > 配置已经完成，接下来选择2管理创世块配置
+
 ```
 > 2
 
@@ -148,6 +155,7 @@ What would you like to do? (default = stats)
 >
 ```
 > 选择2来导出配置文件
+
 ```
 > 2
 
@@ -155,6 +163,7 @@ Which file to save the genesis into? (default = test.json)
 >
 ```
 > 输入文件名，默认名称为第一步输入的网络名称跟.json。
+
 ```
 Which file to save the genesis into? (default = test.json)
 >
@@ -164,7 +173,7 @@ INFO [06-19|14:53:48] Exported existing genesis block
 
 ## 3. 初始化并启动节点
 ### 3.1 初始化节点
-在以太坊节点运行之前，需要运行geth init命令进行初始化操作。其中***.json即为第二步中的生成的创世区块的配置文件。初始化的主要作用是把配置在json文件中的内容，转化成以太坊链的配置，并生成0号区块创世块，将其写到数据库中(可以看下指定目录下应该多了个geth文件夹，进入geth文件夹后可以看到chaindata和lightchaindata两个文件夹)。之后启动节点的时候都是走
+在以太坊节点运行之前，需要运行geth init命令进行初始化操作。其中***.json即为第二步中的生成的创世区块的配置文件。初始化的主要作用是把配置在json文件中的内容，转化成以太坊链的配置，并生成0号区块创世块，将其写到数据库中(可以看下指定目录下应该多了个geth文件夹，进入geth文件夹后可以看到chaindata和lightchaindata两个文件夹)。
 
 ```sh
 geth --datadir=[yourdir] init ***.json
