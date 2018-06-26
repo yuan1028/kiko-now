@@ -286,7 +286,7 @@ admin.addPeer("enode://bafe93edee0c5cfab6a3d12927553abe6f9a3cf31b56b58d65c05e52e
 admin.peers
 ```
 ## 7. 常用的web3指令
-web3的详细API参考[JavaScript API · ethereum/wiki Wiki](https://github.com/ethereum/wiki/wiki/JavaScript-API) ，本文中只介绍涉及到的API。
+web3的详细API参考[JavaScript API · ethereum/wiki Wiki](https://github.com/ethereum/wiki/wiki/JavaScript-API) ，本文中只介绍常用的API。
 
 ### 7.1 eth相关命令
 eth相关命令，主要是用来查看链当前状态，发送交易给链等操作。在web3窗口输入eth可以看到。

@@ -470,7 +470,24 @@ func opReturnDataCopy(pc *uint64, evm *EVM, contract *Contract, memory *Memory, 
 ```
 - 新的栈的大小大于1024,$\lVert\boldsymbol{\mu}_\mathbf{s}\rVert - \mathbf{\delta}_w + \mathbf{\alpha}_w > 1024$
 - 没用权限却尝试非静态调用$\neg I_{\mathrm{w}} \wedge W(w, \boldsymbol{\mu})$。其中非静态调用有，CREATE，SSTORE，SELFDESTRUCT，LOG0，LOG1，LOG2，LOG3，LOG4，以及CALL和CALLCHAINCODE，如公式138。
+```go
+func (in *Interpreter) enforceRestrictions(op OpCode, operation operation, stack *Stack) error {
+	if in.evm.chainRules.IsByzantium {
+		if in.readOnly {
+			// If the interpreter is operating in readonly mode, make sure no
+			// state-modifying operation is performed. The 3rd stack item
+			// for a call operation is the value. Transferring value from one
+			// account to the others means the state is modified and should also
+			// return with an error.
+			if operation.writes || (op == CALL && stack.Back(2).BitLen() > 0) {
+				return errWriteProtection
+			}
+		}
+	}
+	return nil
+}
 
+```
 
 
 ### 6.4.3 跳转表的形式化定义
