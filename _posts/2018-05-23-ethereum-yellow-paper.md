@@ -272,7 +272,7 @@ Header包括以下字段。
 - logsBloom:日志过滤器，用$H_{\mathrm{b}}$表示。*这个暂时没细看，不太确定。*
 - difficulty:区块难度，根据上一个区块的难度以及时间戳算出来的值，用$H_{\mathrm{d}}$表示。
 - number:区块号，用$H_{\mathrm{i}}$表示。
-- gasLimit: 区块的gas数量限制，用$H_{\mathrm{l}}$表示。
+- gasLimit: 区块的gas数量限制，即区块中交易使用掉的gas值不应该超过该值。用$H_{\mathrm{l}}$表示。
 - gasUsed: 区块使用掉的gas数量，用$H_{\mathrm{g}}$表示。
 - timestamp:时间戳，用$H_{\mathrm{s}}$表示。
 - extraData:额外的数据，合法的交易对长度有限制，用$H_{\mathrm{x}}$表示。
