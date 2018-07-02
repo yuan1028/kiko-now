@@ -195,16 +195,24 @@ dd {
 
 // Table
 table {
-  margin-bottom: 1rem;
+  //margin-bottom: 1rem;
+  margin:0px auto;
   border: 1px solid $table-border-color;
   border-collapse: collapse;
   border-spacing: 0;
 }
 
-td, th {
-  padding: 0;
+td {
+  padding: 6px 13px;
   border: 1px solid $table-border-color;
 }
+
+th {
+  padding: 6px 13px;
+  border: 1px solid $table-border-color;
+  font-weight: bold;
+}
+
 
 tbody tr:nth-child(odd) td,
 tbody tr:nth-child(odd) th {
@@ -258,7 +266,7 @@ a.footnote {
 img {
   display: block;
   max-width: 100%;
-  margin: 0 0 1em;
+  margin: 0px auto;
   border-radius: 5px;
 }
 
